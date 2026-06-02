@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qcells Claude Adoption Summary</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #F1F5F9;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .slide {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.12);
+    width: 100%;
+    max-width: 900px;
+    overflow: hidden;
+  }
+  .header {
+    background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+    padding: 28px 36px;
+  }
+  .header-label { font-size: 11px; color: #BFDBFE; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+  .header-title { font-size: 26px; font-weight: 800; color: white; margin-bottom: 4px; }
+  .header-sub { font-size: 13px; color: #93C5FD; }
+  .body { padding: 28px; }
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .kpi-card {
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .kpi-label { font-size: 10px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 0.08em; }
+  .kpi-value { font-size: 26px; font-weight: 800; margin: 4px 0 2px; }
+  .kpi-sub { font-size: 11px; color: #6B7280; }
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6B7280;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+  .chart-wrap { position: relative; height: 185px; }
+  .insights { display: flex; flex-direction: column; gap: 10px; }
+  .insight { display: flex; gap: 8px; align-items: flex-start; }
+  .insight-icon { font-size: 15px; flex-shrink: 0; }
+  .insight-text { font-size: 12px; color: #374151; line-height: 1.55; }
+  .footer { padding: 0 28px 14px; font-size: 10px; color: #D1D5DB; }
+</style>
+</head>
+<body>
+<div class="slide">
+  <div class="header">
+    <div class="header-label">Qcells · AI Usage Report</div>
+    <div class="header-title">Claude Adoption Summary</div>
+    <div class="header-sub">February 2026 – May 2026</div>
+  </div>
+
+  <div class="body">
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">MAU</div>
+        <div class="kpi-value" style="color:#3B82F6">49</div>
+        <div class="kpi-sub">+63% MoM</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Seat Utilization</div>
+        <div class="kpi-value" style="color:#10B981">70.1%</div>
+        <div class="kpi-sub">of provisioned seats</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Weekday Stickiness</div>
+        <div class="kpi-value" style="color:#8B5CF6">75–95%</div>
+        <div class="kpi-sub">DAU/MAU ratio</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Claude Code</div>
+        <div class="kpi-value" style="color:#F59E0B">75.5%</div>
+        <div class="kpi-sub">of MAU use CC</div>
+      </div>
+    </div>
+
+    <div class="bottom-grid">
+      <div>
+        <div class="section-label">User Growth (Feb–May 2026)</div>
+        <div class="chart-wrap">
+          <canvas id="growthChart"></canvas>
+        </div>
+      </div>
+      <div>
+        <div class="section-label">Key Insights</div>
+        <div class="insights">
+          <div class="insight"><span class="insight-icon">📈</span><span class="insight-text">MAU grew 3.5× (14 → 49) over 3 months, with a sharp acceleration in late May.</span></div>
+          <div class="insight"><span class="insight-icon">🔁</span><span class="insight-text">Weekday stickiness of 75–95% shows Claude is embedded in daily workflows — not occasional use.</span></div>
+          <div class="insight"><span class="insight-icon">💻</span><span class="insight-text">75.5% of users are on Claude Code, indicating strong technical team adoption.</span></div>
+          <div class="insight"><span class="insight-icon">✅</span><span class="insight-text">Zero inactive seats — every provisioned user has been active within the last 30 days.</span></div>
+          <div class="insight"><span class="insight-icon">🧠</span><span class="insight-text">Opus drives 80.6% of spend, reflecting deep and complex use cases across the org.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">Data as of May 31, 2026 · Source: Claude Enterprise Analytics</div>
+</div>
+
+<script>
+  const ctx = document.getElementById('growthChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['Feb', 'Mar', 'Apr', 'May'],
+      datasets: [
+        {
+          label: 'MAU',
+          data: [14, 20, 21, 49],
+          borderColor: '#3B82F6',
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          borderWidth: 2.5,
+          pointRadius: 4,
+          pointBackgroundColor: '#3B82F6',
+          tension: 0.3,
+          fill: true,
+        },
+        {
+          label: 'Peak DAU',
+          data: [11, 16, 17, 30],
+          borderColor: '#10B981',
+          backgroundColor: 'rgba(16,185,129,0.05)',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#10B981',
+          borderDash: [5, 3],
+          tension: 0.3,
+          fill: true,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { font: { size: 11 }, boxWidth: 12 } }
+      },
+      scales: {
+        x: { grid: { color: '#F3F4F6' }, ticks: { font: { size: 11 }, color: '#9CA3AF' }, border: { display: false } },
+        y: { grid: { color: '#F3F4F6' }, ticks: { font: { size: 11 }, color: '#9CA3AF' }, border: { display: false } }
+      }
+    }
+  });
+</script>
+</body>
+</html>
