@@ -149,7 +149,11 @@ const totalLabels = {
     ctx.font='600 12px Segoe UI, sans-serif'; ctx.fillStyle='#1c2530';
     ctx.textAlign='left'; ctx.textBaseline='middle';
     DATA.totals.forEach((t,i)=>{
-      if(t>0) ctx.fillText(String(t), x.getPixelForValue(t)+6, y.getPixelForTick(i));
+      if(t>0){
+        const d = DATA.done[i];
+        const pct = Math.round(d/t*100);
+        ctx.fillText(d+'/'+t+' done ('+pct+'%)', x.getPixelForValue(t)+6, y.getPixelForTick(i));
+      }
     });
     ctx.restore();
   }
