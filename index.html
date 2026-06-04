@@ -31,9 +31,15 @@
           padding:18px 22px 26px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
   .chart-box { position:relative; height:760px; }
   .foot { color:var(--muted); font-size:12px; margin-top:14px; line-height:1.5; }
+  .nav { display:flex; gap:4px; margin:0 0 22px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .nav a { padding:10px 16px; font-size:13px; font-weight:600; color:var(--muted);
+           text-decoration:none; border-bottom:2px solid transparent; }
+  .nav a:hover { color:var(--ink); }
+  .nav a.active { color:var(--ink); border-bottom-color:#0b5cab; }
 </style>
 </head>
 <body>
+  <div class="nav"><a href="index.html" class="active">Dashboard</a><a href="agents.html">Per-Agent View</a><a href="scenarios.html">E2E Scenarios</a><a href="ai_page.html">Claude Adoption</a></div>
   <h1>Helios M2 — User Story Progress by Use Case</h1>
   <div class="sub">Grouped by persona · status: <b>Done</b> (Closed/Resolved) → <b>In&nbsp;Progress</b> (Active) → <b>Backlogged</b> (New). Source: Azure DevOps <code>Helios</code>.</div>
 
@@ -76,22 +82,6 @@
       <div class="chart-box" style="height:400px;"><canvas id="sprintPlan"></canvas></div>
       <div class="foot" id="splan-foot"></div>
     </div>
-  </div>
-
-  <h1 style="margin-top:32px;">Per-Agent View</h1>
-  <div class="sub">User-story progress per agent (Done = Closed/Resolved → In Progress = Active → Backlogged = New), across Milestone 1 &amp; 2. Excludes Removed.</div>
-  <div class="wrap">
-    <div class="chart-box" style="height:520px;"><canvas id="agentChart"></canvas></div>
-  </div>
-  <div class="wrap" style="margin-top:18px; overflow-x:auto;">
-    <table id="agentTable" style="width:100%; border-collapse:collapse; font-size:13px;">
-      <thead><tr style="text-align:left; border-bottom:2px solid var(--line); color:var(--muted);">
-        <th style="padding:8px 10px;">Agent</th><th>Use&nbsp;Case(s)</th><th>Persona(s)</th>
-        <th style="text-align:right;">Done</th><th style="text-align:right;">In&nbsp;Prog</th>
-        <th style="text-align:right;">Backlog</th><th style="text-align:right;">Total</th><th>Features</th>
-      </tr></thead>
-      <tbody></tbody>
-    </table>
   </div>
 
   <h1 style="margin-top:32px;">M2 Coverage &amp; Uncovered Stories</h1>
@@ -294,53 +284,6 @@ document.getElementById('splan-foot').innerHTML =
   'Cumulative planned completion stacked by team (bars) vs. planned remaining (line) for the '+SP.scope+'-story M2 commitment. '+
   'The stack rises to the full commitment by end of 26M2S7 while the line burns to <b>0</b>. '+
   'Teams are derived from area path; <b>'+SP.unassigned+'</b> stories not yet assigned to a sprint are distributed evenly across sprints.';
-
-// ---- Per-agent chart (stacked horizontal, by status) ----
-const AG = DATA.agents;
-const WI = 'https://dev.azure.com/qcellsces/Helios/_workitems/edit/';
-new Chart(document.getElementById('agentChart'), {
-  type:'bar',
-  data:{
-    labels: AG.map(a=>a.agent),
-    datasets:[
-      {label:'Done (Closed/Resolved)', data:AG.map(a=>a.done),   backgroundColor:'#2e7d32'},
-      {label:'In Progress (Active)',    data:AG.map(a=>a.inprog), backgroundColor:'#f9a825'},
-      {label:'Backlogged (New)',        data:AG.map(a=>a.back),   backgroundColor:'#90a4ae'},
-    ]
-  },
-  options:{
-    indexAxis:'y', responsive:true, maintainAspectRatio:false,
-    layout:{padding:{right:24}},
-    scales:{
-      x:{ stacked:true, beginAtZero:true, title:{display:true, text:'User Stories'},
-          grid:{color:'#eef2f6'}, ticks:{precision:0} },
-      y:{ stacked:true, grid:{display:false}, ticks:{font:{size:12}} }
-    },
-    plugins:{
-      legend:{position:'top', labels:{usePointStyle:true, boxWidth:10}},
-      tooltip:{ callbacks:{ footer:(its)=>{
-        const a=AG[its[0].dataIndex]; return 'Total: '+a.total+'  ·  UC: '+a.ucs.join(', '); } } }
-    }
-  }
-});
-
-// ---- Per-agent table ----
-const tbody = document.querySelector('#agentTable tbody');
-AG.forEach(a=>{
-  const feats = a.features.map(f=>'<a href="'+WI+f.id+'" target="_blank">#'+f.id+'</a> <span style="color:#9CA3AF">'+f.state+'</span>').join(', ');
-  const tr=document.createElement('tr');
-  tr.style.borderBottom='1px solid var(--line)';
-  tr.innerHTML =
-    '<td style="padding:7px 10px; font-weight:600;">'+a.agent+'</td>'+
-    '<td>'+a.ucs.join(', ')+'</td>'+
-    '<td>'+a.personas.join(', ')+'</td>'+
-    '<td style="text-align:right; color:#2e7d32;">'+a.done+'</td>'+
-    '<td style="text-align:right; color:#b8860b;">'+a.inprog+'</td>'+
-    '<td style="text-align:right; color:#5b6b7b;">'+a.back+'</td>'+
-    '<td style="text-align:right; font-weight:700;">'+a.total+'</td>'+
-    '<td style="font-size:12px;">'+feats+'</td>';
-  tbody.appendChild(tr);
-});
 
 // ---- Coverage donut ----
 const U = DATA.uncovered;
