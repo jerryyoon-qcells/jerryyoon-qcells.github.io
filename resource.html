@@ -29,8 +29,7 @@
   <div class="sub">Per-team / per-person loading for the current sprint. Helios FTE from <code>Solutions Engineering_resource_planning_2026.xlsx</code>; capacity <b>normalized</b> to ≈ <b>34.7 SP per FTE</b> (= total SP ÷ total FTE, so the FTE-weighted average sits at 100%).
     <b>Utilization = assigned SP ÷ (FTE × 34.7).</b>
     <span style="color:#c62828;font-weight:600;">&gt;80% overloaded</span> ·
-    <span style="color:#2e7d32;font-weight:600;">≤80% OK</span>.
-    VPP_DERMS team, Dramel Frazier &amp; Shai Zhang excluded.</div>
+    <span style="color:#2e7d32;font-weight:600;">≤80% OK</span>.</div>
   <div class="cards">
     <div class="card"><div class="n">33</div><div class="l">People</div></div>
     <div class="card"><div class="n">24.6</div><div class="l">Total Helios FTE</div></div>
@@ -100,7 +99,7 @@ new Chart(document.getElementById('personChart'),{type:'bar',
             y:{grid:{display:false},ticks:{font:{size:11},autoSkip:false}}},
     plugins:{legend:{display:false},
       tooltip:{callbacks:{label:(it)=>{const p=R.people[it.dataIndex];return p.util+'% · '+p.sp+' SP / cap '+p.cap_sp+' · '+p.us+' US · FTE '+p.fte;},
-        afterLabel:(it)=>R.people[it.dataIndex].team}}},
+        afterLabel:(it)=>R.people[it.dataIndex].team}}}},
   plugins:[atThr]});
 
 const pb=document.querySelector('#personTable tbody');
