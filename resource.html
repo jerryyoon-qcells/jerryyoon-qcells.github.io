@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helios M2 — Resource Utilization (26M2S2)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script><style>.cards{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px;}.card{background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:130px;box-shadow:0 1px 2px rgba(0,0,0,.04);}.card .n{font-size:24px;font-weight:700;} .card .l{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}.wt{font-weight:600;margin-bottom:8px;}.rt{width:100%;border-collapse:collapse;font-size:13px;} .rt th{text-align:left;color:var(--muted);border-bottom:2px solid var(--line);padding:8px 10px;}.rt td{padding:7px 10px;border-top:1px solid var(--line);} .rt .r{text-align:right;}.badge{font-weight:700;padding:1px 7px;border-radius:10px;font-size:12px;}</style>
+<style>
+  :root { --ink:#1c2530; --muted:#5b6b7b; --line:#e3e8ee; --bg:#f5f7fa; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+         background:var(--bg); color:var(--ink); padding:28px 32px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:13px; margin-bottom:20px; }
+  .wrap { background:#fff; border:1px solid var(--line); border-radius:12px;
+          padding:18px 22px 26px; box-shadow:0 1px 3px rgba(0,0,0,.05); }
+  .chart-box { position:relative; }
+  .nav { display:flex; gap:4px; margin:0 0 22px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .nav a { padding:10px 16px; font-size:13px; font-weight:600; color:var(--muted);
+           text-decoration:none; border-bottom:2px solid transparent; }
+  .nav a:hover { color:var(--ink); }
+  .nav a.active { color:var(--ink); border-bottom-color:#0b5cab; }
+</style>
+</head>
+<body>
+  <div class="nav"><a href="index.html">Dashboard</a><a href="agents.html">Per-Agent View</a><a href="scenarios.html">E2E Scenarios</a><a href="resource.html" class="active">Resource Utilization</a><a href="ai_page.html">Claude Adoption</a><span style="margin-left:auto;font-size:11px;color:var(--muted);padding:10px 4px;white-space:nowrap;">Data as of 2026-06-10 21:14</span></div>
+
+  <h1>Engineering Resource Utilization — Sprint 26M2S2</h1>
+  <div class="sub">Story points &amp; user stories per person, by team, for the current sprint.
+    Capacity baseline = <b>trimmed mean</b> of per-person load (excludes top/bottom 10% as outliers):
+    ≈ <b>21.8 SP</b> / <b>5.8 US</b> per person = 100%.
+    <span style="color:#c62828;font-weight:600;">&gt;110% over-allocated</span> ·
+    <span style="color:#2e7d32;font-weight:600;">80–110% balanced</span> ·
+    <span style="color:#5b6b7b;font-weight:600;">&lt;80% under-allocated</span>.</div>
+  <div class="cards">
+    <div class="card"><div class="n">35</div><div class="l">People assigned</div></div>
+    <div class="card"><div class="n">854</div><div class="l">Story points</div></div>
+    <div class="card"><div class="n">242</div><div class="l">User stories</div></div>
+    <div class="card"><div class="n">24.4</div><div class="l">Avg SP / person</div></div>
+    <div class="card"><div class="n">6.9</div><div class="l">Avg US / person</div></div>
+    <div class="card"><div class="n" style="color:#c62828">1</div><div class="l">Unassigned US <span style="text-transform:none">(11 w/o points)</span></div></div>
+  </div>
+
+  <div class="wrap"><div class="wt">Team utilization (% of trimmed-mean capacity)</div>
+    <div class="chart-box" style="height:300px;"><canvas id="teamUtil"></canvas></div></div>
+
+  <div class="wrap" style="margin-top:18px; overflow-x:auto;">
+    <table id="teamTable" class="rt"><thead><tr>
+      <th>Team</th><th class="r">People</th><th class="r">SP</th><th class="r">US</th>
+      <th class="r">SP/person</th><th class="r">US/person</th><th class="r">SP load</th><th class="r">US load</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+  <h1 style="margin-top:30px;">Per-Person Load</h1>
+  <div class="sub">Story points per person this sprint (bar), colored by team. Dashed line = capacity (21.8 SP).</div>
+  <div class="wrap"><div class="chart-box" style="height:770px;"><canvas id="personChart"></canvas></div></div>
+  <div class="wrap" style="margin-top:18px; overflow-x:auto;">
+    <table id="personTable" class="rt"><thead><tr>
+      <th>Person</th><th>Team</th><th class="r">SP</th><th class="r">US</th>
+      <th class="r">SP load</th><th class="r">US load</th><th class="r">Done US</th>
+    </tr></thead><tbody></tbody></table>
+  </div>
+
+<script>
+const R = {"sprint": "26M2S2", "capacity_sp": 21.8, "capacity_us": 5.8, "trim_frac": 0.1, "totals": {"people": 35, "sp": 854.0, "us": 242, "avg_sp": 24.4, "avg_us": 6.9, "unassigned_us": 1, "unassigned_sp": 3.0, "no_points_us": 11}, "teams": [{"team": "Platform", "people": 12, "sp": 439.0, "us": 121, "done_us": 49, "sp_per_person": 36.6, "us_per_person": 10.1, "util_sp": 168, "util_us": 174}, {"team": "DataCenterPMS", "people": 10, "sp": 218.0, "us": 69, "done_us": 34, "sp_per_person": 21.8, "us_per_person": 6.9, "util_sp": 100, "util_us": 119}, {"team": "Devops", "people": 3, "sp": 103.0, "us": 27, "done_us": 11, "sp_per_person": 34.3, "us_per_person": 9.0, "util_sp": 157, "util_us": 155}, {"team": "Analytics", "people": 5, "sp": 64.0, "us": 11, "done_us": 0, "sp_per_person": 12.8, "us_per_person": 2.2, "util_sp": 59, "util_us": 38}, {"team": "QRE", "people": 3, "sp": 27.0, "us": 10, "done_us": 2, "sp_per_person": 9.0, "us_per_person": 3.3, "util_sp": 41, "util_us": 57}, {"team": "VPP_DERMS", "people": 2, "sp": 3.0, "us": 4, "done_us": 0, "sp_per_person": 1.5, "us_per_person": 2.0, "util_sp": 7, "util_us": 34}], "people": [{"name": "Melvin Elizondo", "team": "Platform", "sp": 97.0, "us": 24, "done_us": 4, "done_sp": 18.0, "util_sp": 445, "util_us": 414}, {"name": "Murali.Vemula", "team": "Devops", "sp": 64.0, "us": 19, "done_us": 10, "done_sp": 25.0, "util_sp": 294, "util_us": 328}, {"name": "Sachin Nirthadi", "team": "DataCenterPMS", "sp": 57.0, "us": 13, "done_us": 11, "done_sp": 41.0, "util_sp": 261, "util_us": 224}, {"name": "Susmitha Pasupuleti", "team": "Platform", "sp": 54.0, "us": 27, "done_us": 20, "done_sp": 39.0, "util_sp": 248, "util_us": 466}, {"name": "Young Lee", "team": "Platform", "sp": 50.0, "us": 12, "done_us": 3, "done_sp": 15.0, "util_sp": 229, "util_us": 207}, {"name": "Val Apgar", "team": "Platform", "sp": 50.0, "us": 12, "done_us": 4, "done_sp": 16.0, "util_sp": 229, "util_us": 207}, {"name": "Jasmin Patel", "team": "Platform", "sp": 46.0, "us": 10, "done_us": 2, "done_sp": 6.0, "util_sp": 211, "util_us": 172}, {"name": "Aman Singh", "team": "Platform", "sp": 33.0, "us": 10, "done_us": 6, "done_sp": 18.0, "util_sp": 151, "util_us": 172}, {"name": "alok.pandey", "team": "Platform", "sp": 30.0, "us": 7, "done_us": 3, "done_sp": 16.0, "util_sp": 138, "util_us": 121}, {"name": "Charles Stoksik", "team": "DataCenterPMS", "sp": 30.0, "us": 16, "done_us": 0, "done_sp": 0.0, "util_sp": 138, "util_us": 276}, {"name": "Ali Rizvi", "team": "Devops", "sp": 30.0, "us": 5, "done_us": 0, "done_sp": 0.0, "util_sp": 138, "util_us": 86}, {"name": "Stanley Wang", "team": "DataCenterPMS", "sp": 28.0, "us": 8, "done_us": 4, "done_sp": 14.0, "util_sp": 128, "util_us": 138}, {"name": "quazi.rabbi", "team": "DataCenterPMS", "sp": 26.0, "us": 8, "done_us": 4, "done_sp": 8.0, "util_sp": 119, "util_us": 138}, {"name": "sangjun.jin", "team": "DataCenterPMS", "sp": 25.0, "us": 7, "done_us": 5, "done_sp": 15.0, "util_sp": 115, "util_us": 121}, {"name": "Zahm Nwokah", "team": "Platform", "sp": 23.0, "us": 5, "done_us": 2, "done_sp": 8.0, "util_sp": 106, "util_us": 86}, {"name": "RSubramanya Prasad", "team": "Platform", "sp": 21.0, "us": 5, "done_us": 1, "done_sp": 3.0, "util_sp": 96, "util_us": 86}, {"name": "ba.saisucharithap", "team": "DataCenterPMS", "sp": 19.0, "us": 5, "done_us": 3, "done_sp": 13.0, "util_sp": 87, "util_us": 86}, {"name": "soomin park", "team": "QRE", "sp": 16.0, "us": 7, "done_us": 2, "done_sp": 5.0, "util_sp": 73, "util_us": 121}, {"name": "shuyang.li", "team": "Analytics", "sp": 16.0, "us": 2, "done_us": 0, "done_sp": 0.0, "util_sp": 73, "util_us": 34}, {"name": "Bahar Najafi", "team": "DataCenterPMS", "sp": 16.0, "us": 4, "done_us": 3, "done_sp": 13.0, "util_sp": 73, "util_us": 69}, {"name": "muhammad.qasmi", "team": "DataCenterPMS", "sp": 14.0, "us": 4, "done_us": 3, "done_sp": 11.0, "util_sp": 64, "util_us": 69}, {"name": "Sanjeev Lakkaraju", "team": "Platform", "sp": 14.0, "us": 4, "done_us": 2, "done_sp": 6.0, "util_sp": 64, "util_us": 69}, {"name": "Michael Risbeck", "team": "Analytics", "sp": 13.0, "us": 2, "done_us": 0, "done_sp": 0.0, "util_sp": 60, "util_us": 34}, {"name": "Chenlu Zhang", "team": "Analytics", "sp": 13.0, "us": 3, "done_us": 0, "done_sp": 0.0, "util_sp": 60, "util_us": 52}, {"name": "Jim Avery", "team": "Platform", "sp": 13.0, "us": 4, "done_us": 2, "done_sp": 5.0, "util_sp": 60, "util_us": 69}, {"name": "Ravi Teja Gutta", "team": "Analytics", "sp": 12.0, "us": 2, "done_us": 0, "done_sp": 0.0, "util_sp": 55, "util_us": 34}, {"name": "halley.nathwani", "team": "Analytics", "sp": 10.0, "us": 2, "done_us": 0, "done_sp": 0.0, "util_sp": 46, "util_us": 34}, {"name": "Sudhir Mekala", "team": "Devops", "sp": 9.0, "us": 3, "done_us": 1, "done_sp": 1.0, "util_sp": 41, "util_us": 52}, {"name": "Nikhil Johnson", "team": "Platform", "sp": 8.0, "us": 1, "done_us": 0, "done_sp": 0.0, "util_sp": 37, "util_us": 17}, {"name": "federico.imparatta", "team": "QRE", "sp": 8.0, "us": 2, "done_us": 0, "done_sp": 0.0, "util_sp": 37, "util_us": 34}, {"name": "Juan Culebro", "team": "VPP_DERMS", "sp": 3.0, "us": 2, "done_us": 0, "done_sp": 0.0, "util_sp": 14, "util_us": 34}, {"name": "Prashanth Nagaraja", "team": "QRE", "sp": 3.0, "us": 1, "done_us": 0, "done_sp": 0.0, "util_sp": 14, "util_us": 17}, {"name": "brandon.davis", "team": "DataCenterPMS", "sp": 3.0, "us": 1, "done_us": 1, "done_sp": 3.0, "util_sp": 14, "util_us": 17}, {"name": "dramel.frazier", "team": "DataCenterPMS", "sp": 0.0, "us": 3, "done_us": 0, "done_sp": 0.0, "util_sp": 0, "util_us": 52}, {"name": "shuai.zhang", "team": "VPP_DERMS", "sp": 0.0, "us": 2, "done_us": 0, "done_sp": 0.0, "util_sp": 0, "util_us": 34}]};
+const PAL = ['#0b5cab','#0a8f5b','#c8742a','#7a3fb0','#c62828','#5b6b7b','#00838f','#9e9d24'];
+const TC = {}; R.teams.forEach((t,i)=> TC[t.team]=PAL[i%PAL.length]);
+const uColor = p => p>110 ? '#c62828' : p>=80 ? '#2e7d32' : '#90a4ae';
+const at100 = {id:'at100', afterDraw(c){const {ctx,chartArea:{top,bottom},scales:{x}}=c;
+  const px=x.getPixelForValue(100); if(px==null)return; ctx.save();
+  ctx.strokeStyle='#c62828';ctx.setLineDash([5,4]);ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.moveTo(px,top);ctx.lineTo(px,bottom);ctx.stroke();ctx.restore();}};
+
+new Chart(document.getElementById('teamUtil'),{type:'bar',
+  data:{labels:R.teams.map(t=>t.team),datasets:[
+    {label:'SP load %',data:R.teams.map(t=>t.util_sp),backgroundColor:'#1565c0'},
+    {label:'US load %',data:R.teams.map(t=>t.util_us),backgroundColor:'#26a69a'}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:30}},
+    scales:{x:{beginAtZero:true,title:{display:true,text:'% of capacity (100% = trimmed mean)'},grid:{color:'#eef2f6'},ticks:{callback:v=>v+'%'}},
+            y:{grid:{display:false}}},
+    plugins:{legend:{position:'top',labels:{usePointStyle:true,boxWidth:10}},
+      tooltip:{callbacks:{afterBody:(it)=>{const t=R.teams[it[0].dataIndex];return t.people+' people · '+t.sp+' SP · '+t.us+' US';}}}}},
+  plugins:[at100]});
+
+const tb=document.querySelector('#teamTable tbody');
+R.teams.forEach(t=>{const tr=document.createElement('tr');
+  const b=(p)=>'<span class="badge" style="background:'+uColor(p)+'22;color:'+uColor(p)+'">'+p+'%</span>';
+  tr.innerHTML='<td style="font-weight:600;border-left:4px solid '+TC[t.team]+';">'+t.team+'</td>'+
+    '<td class="r">'+t.people+'</td><td class="r">'+t.sp+'</td><td class="r">'+t.us+'</td>'+
+    '<td class="r">'+t.sp_per_person+'</td><td class="r">'+t.us_per_person+'</td>'+
+    '<td class="r">'+b(t.util_sp)+'</td><td class="r">'+b(t.util_us)+'</td>';
+  tb.appendChild(tr);});
+
+new Chart(document.getElementById('personChart'),{type:'bar',
+  data:{labels:R.people.map(p=>p.name),datasets:[{label:'Story points',data:R.people.map(p=>p.sp),
+    backgroundColor:R.people.map(p=>TC[p.team]||'#90a4ae')}]},
+  options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:30}},
+    scales:{x:{beginAtZero:true,title:{display:true,text:'Story points'},grid:{color:'#eef2f6'}},
+            y:{grid:{display:false},ticks:{font:{size:11},autoSkip:false}}},
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:(it)=>{const p=R.people[it.dataIndex];return p.sp+' SP ('+p.util_sp+'%) · '+p.us+' US ('+p.util_us+'%)';},
+        afterLabel:(it)=>R.people[it.dataIndex].team}}},
+  plugins:[{id:'capLine',afterDraw(c){const {ctx,chartArea:{top,bottom},scales:{x}}=c;
+    const px=x.getPixelForValue(R.capacity_sp);ctx.save();ctx.strokeStyle='#1c2530';ctx.setLineDash([5,4]);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(px,top);ctx.lineTo(px,bottom);ctx.stroke();ctx.restore();}}]}});
+
+const pb=document.querySelector('#personTable tbody');
+R.people.forEach(p=>{const tr=document.createElement('tr');
+  const b=(v)=>'<span class="badge" style="background:'+uColor(v)+'22;color:'+uColor(v)+'">'+v+'%</span>';
+  tr.innerHTML='<td style="font-weight:600;">'+p.name+'</td>'+
+    '<td style="border-left:4px solid '+(TC[p.team]||'#90a4ae')+';padding-left:8px;">'+p.team+'</td>'+
+    '<td class="r">'+p.sp+'</td><td class="r">'+p.us+'</td>'+
+    '<td class="r">'+b(p.util_sp)+'</td><td class="r">'+b(p.util_us)+'</td><td class="r">'+p.done_us+'</td>';
+  pb.appendChild(tr);});
+</script>
+</body>
+</html>
