@@ -54,7 +54,7 @@
   <div class="wrap" style="margin-bottom:18px;">
     <div class="wrap-title">User Stories Cleared per Sprint — Milestone 1 vs Milestone 2 (Claude impact)</div>
     <div class="chart-box" style="height:300px;"><canvas id="m1m2Chart"></canvas></div>
-    <div class="note">Stories completed per sprint, aligned by sprint number within each milestone. <b>M1</b> = partial Claude use · <b>M2</b> = broad adoption across all engineering teams. M2 S2 is in progress (partial). Caveat: M2 also spans more teams than M1 — directional, not like-for-like.</div>
+    <div class="note"><span style="background:#10B98122;color:#0a8f5b;font-weight:700;padding:2px 8px;border-radius:10px;">M2 is clearing +64% (S1) to +77% (S2) more stories than M1 at the same sprint point</span> — and S2 is only half-elapsed. Stories completed per sprint, aligned by sprint number within each milestone. <b>M1</b> = partial Claude use · <b>M2</b> = broad adoption across all engineering teams. Caveat: M2 also spans more teams than M1 — directional, not like-for-like.</div>
   </div>
 
   <div class="cards">
@@ -94,6 +94,29 @@
   // --- M1 vs M2 user-story clearing (stories completed per sprint, by completion date) ---
   const CMP = {labels:['S1','S2','S3','S4','S5','S6','S7','S8'],
     m1:[81,112,311,191,196,150,152,75], m2:[133,198,null,null,null,null,null,null]};
+  // Highlight: draw "+X% vs M1" above each M2 point that has a matching M1 sprint
+  const upliftLabels = {
+    id:'upliftLabels',
+    afterDatasetsDraw(c){
+      const ctx=c.ctx, ds=c.getDatasetMeta(1);   // dataset 1 = M2
+      ctx.save();
+      CMP.m2.forEach((v,i)=>{
+        if(v==null || CMP.m1[i]==null) return;
+        const pct=Math.round((v-CMP.m1[i])/CMP.m1[i]*100);
+        if(pct<=0) return;
+        const pt=ds.data[i];
+        const txt='+'+pct+'%';
+        ctx.font='700 13px Segoe UI, sans-serif';
+        const w=ctx.measureText(txt).width+12;
+        const x=pt.x-w/2, y=pt.y-30;
+        ctx.fillStyle='#10B981'; ctx.strokeStyle='#10B981';
+        ctx.beginPath(); ctx.roundRect(x,y,w,20,10); ctx.globalAlpha=0.12; ctx.fill(); ctx.globalAlpha=1; ctx.stroke();
+        ctx.fillStyle='#0a8f5b'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(txt, pt.x, y+10);
+      });
+      ctx.restore();
+    }
+  };
   new Chart(document.getElementById('m1m2Chart').getContext('2d'), {
     type:'line',
     data:{labels:CMP.labels,datasets:[
@@ -102,11 +125,13 @@
       {label:'M2 — broad Claude',data:CMP.m2,borderColor:'#3B82F6',backgroundColor:'rgba(59,130,246,0.12)',
        borderWidth:3,pointRadius:5,pointBackgroundColor:'#3B82F6',tension:0.3,spanGaps:false,fill:true}
     ]},
-    options:{responsive:true,maintainAspectRatio:false,
+    options:{responsive:true,maintainAspectRatio:false,layout:{padding:{top:28}},
       plugins:{legend:{labels:{font:{size:12},boxWidth:14,usePointStyle:true}},
-        tooltip:{callbacks:{label:(it)=>it.dataset.label+': '+(it.parsed.y==null?'—':it.parsed.y+' stories')}}},
+        tooltip:{callbacks:{label:(it)=>it.dataset.label+': '+(it.parsed.y==null?'—':it.parsed.y+' stories'),
+          afterLabel:(it)=>{const i=it.dataIndex; if(it.datasetIndex===1 && CMP.m2[i]!=null && CMP.m1[i]!=null){return '+'+Math.round((CMP.m2[i]-CMP.m1[i])/CMP.m1[i]*100)+'% vs M1';}}}}},
       scales:{x:{title:{display:true,text:'Sprint # within milestone'},grid:{color:'#eef2f6'},ticks:{font:{size:12},color:'#9CA3AF'},border:{display:false}},
-              y:{beginAtZero:true,title:{display:true,text:'User stories cleared'},grid:{color:'#eef2f6'},ticks:{font:{size:12},color:'#9CA3AF'},border:{display:false}}}}
+              y:{beginAtZero:true,title:{display:true,text:'User stories cleared'},grid:{color:'#eef2f6'},ticks:{font:{size:12},color:'#9CA3AF'},border:{display:false}}}},
+    plugins:[upliftLabels]
   });
 
   // --- Growth Chart ---
